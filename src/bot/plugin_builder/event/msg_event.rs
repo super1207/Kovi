@@ -1,5 +1,5 @@
-use crate::bot::message::cq_to_arr_inner;
 use super::{Anonymous, EventBuildError, Sender};
+use crate::bot::message::cq_to_arr_inner;
 use crate::bot::runtimebot::send_api_request_with_forget;
 use crate::types::ApiAndOneshot;
 use crate::{
@@ -142,7 +142,13 @@ impl MsgEvent {
             Message::from_vec_segment_value(v)
                 .map_err(|e| EventBuildError::ParseError(format!("Parse error: {}", e)))?
         } else {
-            let str_v = temp_object["message"].as_str().ok_or(format!("message is not string:{:?}",temp_object["message"]))?;
+            let str_v = temp_object["message"]
+                .as_str()
+                .ok_or(format!(
+                    "message is not string:{:?}",
+                    temp_object["message"]
+                ))
+                .map_err(|e| EventBuildError::ParseError(format!("Parse error: {}", e)))?;
             let arr_v = cq_to_arr_inner(str_v);
             Message::from_vec_segment_value(arr_v).unwrap()
         };
