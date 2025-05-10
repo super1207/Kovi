@@ -54,8 +54,18 @@ impl NoticeEvent {
         let temp: Value = serde_json::from_str(msg)?;
         let time = temp.get("time").unwrap().as_i64().unwrap();
         let self_id = temp.get("self_id").unwrap().as_i64().unwrap();
-        let post_type = temp.get("post_type").unwrap().to_string();
-        let notice_type = temp.get("notice_type").unwrap().to_string();
+        let post_type = temp
+            .get("post_type")
+            .unwrap()
+            .as_str()
+            .unwrap_or("")
+            .to_string();
+        let notice_type = temp
+            .get("notice_type")
+            .unwrap()
+            .as_str()
+            .unwrap_or("")
+            .to_string();
         Ok(NoticeEvent {
             time,
             self_id,
@@ -85,8 +95,18 @@ impl RequestEvent {
         let temp: Value = serde_json::from_str(msg)?;
         let time = temp.get("time").unwrap().as_i64().unwrap();
         let self_id = temp.get("self_id").unwrap().as_i64().unwrap();
-        let post_type = temp.get("post_type").unwrap().to_string();
-        let request_type = temp.get("request_type").unwrap().to_string();
+        let post_type = temp
+            .get("post_type")
+            .unwrap()
+            .as_str()
+            .unwrap_or("")
+            .to_string();
+        let request_type = temp
+            .get("request_type")
+            .unwrap()
+            .as_str()
+            .unwrap_or("")
+            .to_string();
         Ok(RequestEvent {
             time,
             self_id,
