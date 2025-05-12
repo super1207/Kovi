@@ -9,10 +9,10 @@ use std::{
     borrow::Borrow,
     future::Future,
     process::exit,
-    sync::{Arc, LazyLock, OnceLock},
+    sync::{Arc, LazyLock},
 };
 use tokio::{
-    runtime::Runtime,
+    runtime::Runtime as TokioRuntime,
     sync::{
         mpsc::{self, Sender},
         watch,
@@ -20,34 +20,8 @@ use tokio::{
     task::JoinHandle,
 };
 
-pub(crate) static RUNTIME: OnceLock<KoviRuntime> = OnceLock::new();
+pub(crate) static RUNTIME: LazyLock<TokioRuntime> = LazyLock::new(|| TokioRuntime::new().unwrap());
 pub(crate) use RUNTIME as RT;
-
-#[derive(Debug)]
-pub struct KoviRuntime {
-    pub(crate) runtime: Arc<Runtime>,
-}
-
-impl KoviRuntime {
-    pub fn new() -> Self {
-        let runtime = Runtime::new().unwrap();
-        Self {
-            runtime: Arc::new(runtime),
-        }
-    }
-
-    pub fn block_on<F: Future>(&self, future: F) -> F::Output {
-        self.runtime.block_on(future)
-    }
-
-    pub fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
-    where
-        F: Future + Send + 'static,
-        F::Output: Send + 'static,
-    {
-        self.runtime.spawn(future)
-    }
-}
 
 impl Bot {
     pub fn spawn<F>(&mut self, future: F) -> JoinHandle<F::Output>
@@ -55,7 +29,7 @@ impl Bot {
         F: Future + Send + 'static,
         F::Output: Send + 'static,
     {
-        let join = RT.get().unwrap().spawn(future);
+        let join = RT.spawn(future);
         self.run_abort.push(join.abort_handle());
         join
     }
@@ -67,10 +41,6 @@ impl Bot {
         let server = self.information.server.clone();
 
         let bot = Arc::new(RwLock::new(self));
-
-        if RUNTIME.get().is_none() {
-            RUNTIME.set(KoviRuntime::new()).unwrap();
-        }
 
         let async_task = async {
             //处理连接，从msg_tx返回消息
@@ -84,7 +54,7 @@ impl Bot {
                 mpsc::channel(32);
 
             // 连接
-            let connect_task = RT.get().unwrap().spawn({
+            let connect_task = RT.spawn({
                 let event_tx = event_tx.clone();
                 Self::ws_connect(server, api_rx, event_tx, bot.clone())
             });
@@ -123,16 +93,10 @@ impl Bot {
 
                 // Drop为关闭事件，所以要等待，其他的不等待
                 if let InternalEvent::KoviEvent(KoviEvent::Drop) = event {
-                    drop_task = Some(
-                        RT.get()
-                            .unwrap()
-                            .spawn(Self::handler_event(bot, event, api_tx)),
-                    );
+                    drop_task = Some(RT.spawn(Self::handler_event(bot, event, api_tx)));
                     break;
                 } else {
-                    RT.get()
-                        .unwrap()
-                        .spawn(Self::handler_event(bot, event, api_tx));
+                    RT.spawn(Self::handler_event(bot, event, api_tx));
                 }
             }
             if let Some(drop_task) = drop_task {
@@ -145,7 +109,7 @@ impl Bot {
             }
         };
 
-        RUNTIME.get().unwrap().block_on(async_task);
+        RUNTIME.block_on(async_task);
     }
 
     // 运行所有main()
@@ -194,7 +158,7 @@ impl ExitCheck {
         let (tx, watch_rx) = watch::channel(false);
 
         // 启动 drop check 任务
-        let join_handle = RT.get().unwrap().spawn(async move {
+        let join_handle = RT.spawn(async move {
             Self::await_exit_signal().await;
 
             let _ = tx.send(true);

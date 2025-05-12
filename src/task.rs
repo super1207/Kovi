@@ -24,7 +24,7 @@ impl TaskManager {
         let handles = Arc::new(Mutex::new(TaskAbortHandles::default()));
 
         let handles_clone = handles.clone();
-        RT.get().unwrap().spawn(async move {
+        RT.spawn(async move {
             let mut interval = interval(Duration::from_secs(20)); // 每<?>秒清理一次
             loop {
                 interval.tick().await;
@@ -97,7 +97,7 @@ where
     PLUGIN_NAME.with(|name| {
         let join = {
             let name = name.clone();
-            RT.get().unwrap().spawn(PLUGIN_NAME.scope(name, future))
+            RT.spawn(PLUGIN_NAME.scope(name, future))
         };
 
         let about_join = join.abort_handle();

@@ -482,9 +482,7 @@ fn enable_plugin<T: AsRef<str>>(
     let plugin_builder =
         PluginBuilder::new(plugin_name.to_string(), bot.clone(), host, port, api_tx);
 
-    RT.get()
-        .unwrap()
-        .spawn(async move { plugin_.run(plugin_builder) });
+    RT.spawn(async move { plugin_.run(plugin_builder) });
 
     Ok(())
 }

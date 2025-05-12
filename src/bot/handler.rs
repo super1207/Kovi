@@ -192,7 +192,7 @@ impl Bot {
                         let bot_clone = bot.clone();
                         let listen = listen.clone();
                         let enabled = plugin.enabled.subscribe();
-                        RT.get().unwrap().spawn(async move {
+                        RT.spawn(async move {
                             tokio::select! {
                                 _ = PLUGIN_NAME.scope(name, Self::handle_msg(listen, event_clone, bot_clone)) => {}
                                 _ = monitor_enabled_state(enabled) => {}
@@ -213,7 +213,7 @@ impl Bot {
                         let listen = listen.clone();
                         let enabled = plugin.enabled.subscribe();
 
-                        RT.get().unwrap().spawn(async move {
+                        RT.spawn(async move {
                             tokio::select! {
                                 _ = PLUGIN_NAME.scope(name, Self::handler_msg_sent(listen,event_clone)) => {}
                                 _ = monitor_enabled_state(enabled) => {}
@@ -233,7 +233,7 @@ impl Bot {
                         let listen = listen.clone();
                         let enabled = plugin.enabled.subscribe();
 
-                        RT.get().unwrap().spawn(async move {
+                        RT.spawn(async move {
                             tokio::select! {
                                 _ = PLUGIN_NAME.scope(name, Self::handler_notice(listen, event_clone)) => {}
                                 _ = monitor_enabled_state(enabled) => {}
@@ -253,7 +253,7 @@ impl Bot {
                         let listen = listen.clone();
                         let enabled = plugin.enabled.subscribe();
 
-                        RT.get().unwrap().spawn(async move {
+                        RT.spawn(async move {
                             tokio::select! {
                                 _ = PLUGIN_NAME.scope(name, Self::handler_request(listen, event_clone)) => {}
                                 _ = monitor_enabled_state(enabled) => {}

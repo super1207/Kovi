@@ -386,7 +386,7 @@ impl PluginBuilder {
             let plugin = bot.plugins.get(&*name).unwrap();
             plugin.enabled.subscribe()
         };
-        RT.get().unwrap().spawn(PLUGIN_NAME.scope(name.clone(), async move {
+        RT.spawn(PLUGIN_NAME.scope(name.clone(), async move {
 
             tokio::select! {
                 _ = async {
