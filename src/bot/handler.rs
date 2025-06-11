@@ -90,7 +90,8 @@ impl Bot {
 
         let msg_event = MsgEvent::de(&msg, &bot_read.information, &api_tx);
 
-        let msg_sevent_opt = match msg_event {
+        // 这里在 没有 plugin-access-control 会警告所以用 _
+        let _msg_sevent_opt = match msg_event {
             Some(event) => {
                 let event = Arc::new(event);
 
@@ -117,9 +118,9 @@ impl Bot {
         };
 
         for (name, plugin) in bot_read.plugins.iter() {
-            if let Some(event) = &msg_sevent_opt {
+            #[cfg(feature = "plugin-access-control")]
+            if let Some(event) = &_msg_sevent_opt {
                 // 判断是否黑白名单
-                #[cfg(feature = "plugin-access-control")]
                 if !is_access(plugin, event) {
                     continue;
                 }

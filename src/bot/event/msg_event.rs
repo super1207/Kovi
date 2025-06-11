@@ -16,7 +16,7 @@ use serde_json::{self, Value, json};
 use tokio::sync::mpsc;
 
 #[cfg(feature = "cqstring")]
-use crate::bot::message::{CQMessage, cq_to_arr};
+use crate::bot::message::CQMessage;
 
 #[deprecated(since = "0.11.0", note = "请使用 `MsgEvent` 代替")]
 pub type AllMsgEvent = MsgEvent;

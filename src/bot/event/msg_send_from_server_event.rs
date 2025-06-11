@@ -13,7 +13,7 @@ use serde_json::{self, Value, json};
 use tokio::sync::mpsc;
 
 #[cfg(feature = "cqstring")]
-use crate::bot::message::{CQMessage, cq_to_arr};
+use crate::bot::message::CQMessage;
 
 #[derive(Debug, Clone)]
 pub struct MsgSendFromServerEvent {
