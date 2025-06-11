@@ -23,7 +23,8 @@ serde_json = "1"
 thiserror = "2"
 log = "0.4"
 anstyle = "1"
-kovi-macros = { version = "0.5", git = "https://github.com/Threkork/kovi-macros.git", rev = "10391f4" }
+# kovi-macros = { version = "0.5.1", git = "https://github.com/Threkork/kovi-macros.git", rev = "10391f4" }
+kovi-macros = { version = "0.5.1", path = "../kovi-macros" }
 env_logger = { version = "0.11", default-features = false, features = [
     "auto-color",
     "color",
@@ -38,17 +39,17 @@ croner = "2"
 rand = "0.8"
 ahash = "0.8"
 parking_lot = "0.12"
+libloading = { version = "0.8", optional = true }
 
 
 [features]
-default = ["logger", "save_bot_status", "plugin-access-control", "message_sent"]
+default = ["logger", "save_bot_status", "plugin-access-control"]
 logger = ["env_logger"]
 save_bot_status = ["save_bot_admin", "save_plugin_status"]
 save_bot_admin = []
 save_plugin_status = []
 plugin-access-control = []
 
-message_sent = []
 cqstring = []
 
 native-tls-vendored = ["tokio-tungstenite/native-tls-vendored"]

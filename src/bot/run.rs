@@ -1,8 +1,5 @@
-use super::{
-    Bot,
-    handler::{InternalEvent, KoviEvent},
-};
-use crate::{PluginBuilder, types::ApiAndOneshot};
+use super::{Bot, handler::KoviEvent};
+use crate::{PluginBuilder, bot::handler::InternalInternalEvent, types::ApiAndOneshot};
 use log::error;
 use parking_lot::RwLock;
 use std::{
@@ -20,7 +17,8 @@ use tokio::{
     task::JoinHandle,
 };
 
-pub(crate) static RUNTIME: LazyLock<TokioRuntime> = LazyLock::new(|| TokioRuntime::new().unwrap());
+pub(crate) static RUNTIME: LazyLock<TokioRuntime> =
+    LazyLock::new(|| TokioRuntime::new().expect("unreachable! tokio runtime fail to start"));
 pub(crate) use RUNTIME as RT;
 
 impl Bot {
@@ -43,10 +41,15 @@ impl Bot {
         let bot = Arc::new(RwLock::new(self));
 
         let async_task = async {
+            // let (tx, rx): (
+            //     tokio::sync::broadcast::Sender<Arc<dyn super::plugin_builder::event::Event>>,
+            //     tokio::sync::broadcast::Receiver<Arc<dyn super::plugin_builder::event::Event>>,
+            // ) = tokio::sync::broadcast::channel(32);
+
             //处理连接，从msg_tx返回消息
             let (event_tx, mut event_rx): (
-                mpsc::Sender<InternalEvent>,
-                mpsc::Receiver<InternalEvent>,
+                mpsc::Sender<InternalInternalEvent>,
+                mpsc::Receiver<InternalInternalEvent>,
             ) = mpsc::channel(32);
 
             // 接收插件的api
@@ -59,7 +62,7 @@ impl Bot {
                 Self::ws_connect(server, api_rx, event_tx, bot.clone())
             });
 
-            let connect_res = connect_task.await.unwrap();
+            let connect_res = connect_task.await.expect("unreachable");
 
             if let Err(e) = connect_res {
                 error!(
@@ -92,7 +95,7 @@ impl Bot {
                 let bot = bot.clone();
 
                 // Drop为关闭事件，所以要等待，其他的不等待
-                if let InternalEvent::KoviEvent(KoviEvent::Drop) = event {
+                if let InternalInternalEvent::KoviEvent(KoviEvent::Drop) = event {
                     drop_task = Some(RT.spawn(Self::handler_event(bot, event, api_tx)));
                     break;
                 } else {
@@ -109,7 +112,7 @@ impl Bot {
             }
         };
 
-        RUNTIME.block_on(async_task);
+        RT.block_on(async_task);
     }
 
     // 运行所有main()
@@ -182,11 +185,11 @@ impl ExitCheck {
 
         #[cfg(windows)]
         {
-            let mut sig_ctrl_break = windows::ctrl_break().unwrap();
-            let mut sig_ctrl_c = windows::ctrl_c().unwrap();
-            let mut sig_ctrl_close = windows::ctrl_close().unwrap();
-            let mut sig_ctrl_logoff = windows::ctrl_logoff().unwrap();
-            let mut sig_ctrl_shutdown = windows::ctrl_shutdown().unwrap();
+            let mut sig_ctrl_break = windows::ctrl_break().expect("unreachable");
+            let mut sig_ctrl_c = windows::ctrl_c().expect("unreachable");
+            let mut sig_ctrl_close = windows::ctrl_close().expect("unreachable");
+            let mut sig_ctrl_logoff = windows::ctrl_logoff().expect("unreachable");
+            let mut sig_ctrl_shutdown = windows::ctrl_shutdown().expect("unreachable");
 
             tokio::select! {
                 _ = sig_ctrl_break.recv() => {}
@@ -199,11 +202,11 @@ impl ExitCheck {
 
         #[cfg(unix)]
         {
-            let mut sig_hangup = signal(SignalKind::hangup()).unwrap();
-            let mut sig_alarm = signal(SignalKind::alarm()).unwrap();
-            let mut sig_interrupt = signal(SignalKind::interrupt()).unwrap();
-            let mut sig_quit = signal(SignalKind::quit()).unwrap();
-            let mut sig_terminate = signal(SignalKind::terminate()).unwrap();
+            let mut sig_hangup = signal(SignalKind::hangup()).expect("unreachable");
+            let mut sig_alarm = signal(SignalKind::alarm()).expect("unreachable");
+            let mut sig_interrupt = signal(SignalKind::interrupt()).expect("unreachable");
+            let mut sig_quit = signal(SignalKind::quit()).expect("unreachable");
+            let mut sig_terminate = signal(SignalKind::terminate()).expect("unreachable");
 
             tokio::select! {
                 _ = sig_hangup.recv() => {}
@@ -217,16 +220,16 @@ impl ExitCheck {
 
     pub async fn await_exit_signal_change(&self) {
         let mut rx = self.watch_rx.clone();
-        rx.changed().await.unwrap();
+        rx.changed().await.expect("The exit signal wait failed");
     }
 }
 
-pub(crate) async fn exit_signal_check(tx: Sender<InternalEvent>) {
+pub(crate) async fn exit_signal_check(tx: Sender<InternalInternalEvent>) {
     DROP_CHECK.await_exit_signal_change().await;
 
-    tx.send(InternalEvent::KoviEvent(KoviEvent::Drop))
+    tx.send(InternalInternalEvent::KoviEvent(KoviEvent::Drop))
         .await
-        .unwrap();
+        .expect("The exit signal send failed");
 }
 
 async fn handler_second_time_exit_signal() {

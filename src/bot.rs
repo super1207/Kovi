@@ -2,6 +2,7 @@ use ahash::{HashMapExt as _, RandomState};
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::{Input, Select};
 use plugin_builder::Listen;
+use rand::Rng as _;
 #[cfg(feature = "plugin-access-control")]
 use runtimebot::kovi_api::AccessList;
 use serde::{Deserialize, Serialize};
@@ -20,6 +21,7 @@ use crate::error::{BotBuildError, BotError};
 use crate::RT;
 #[cfg(feature = "plugin-access-control")]
 pub use crate::bot::runtimebot::kovi_api::AccessControlMode;
+
 use crate::plugin::{Plugin, PluginStatus};
 use crate::types::KoviAsyncFn;
 
@@ -27,8 +29,10 @@ pub(crate) mod connect;
 pub(crate) mod handler;
 pub(crate) mod run;
 
+// 兼容
+pub use crate::plugin::plugin_builder;
+pub mod event;
 pub mod message;
-pub mod plugin_builder;
 pub mod runtimebot;
 
 /// bot结构体
@@ -80,7 +84,7 @@ impl Bot {
         }
     }
 
-    /// 挂载插件的启动函数。
+    /// 挂载插件。
     #[deprecated(since = "0.12.0", note = "请使用 `mount_plugin` 代替")]
     pub fn mount_main<T>(&mut self, name: T, version: T, main: Arc<KoviAsyncFn>)
     where
@@ -107,7 +111,7 @@ impl Bot {
         self.plugins.insert(name, bot_plugin);
     }
 
-    /// 挂载插件的启动函数。
+    /// 挂载插件。
     pub fn mount_plugin(&mut self, plugin: Plugin) {
         self.plugins.insert(plugin.name.clone(), plugin);
     }
@@ -372,7 +376,7 @@ impl Bot {
 pub struct SendApi {
     pub action: String,
     pub params: Value,
-    pub echo: String,
+    echo: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -380,7 +384,7 @@ pub struct ApiReturn {
     pub status: String,
     pub retcode: i32,
     pub data: Value,
-    pub echo: String,
+    pub(crate) echo: String,
 }
 
 /// kovi的配置
@@ -469,17 +473,27 @@ impl std::fmt::Display for ApiReturn {
 
 impl std::fmt::Display for SendApi {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", serde_json::to_string(self).unwrap())
+        write!(f, "{}", serde_json::to_string(self).expect("unreachable"))
     }
 }
 
 impl SendApi {
-    pub fn new(action: &str, params: Value, echo: &str) -> Self {
+    pub fn new(action: &str, params: Value) -> Self {
         SendApi {
             action: action.to_string(),
             params,
-            echo: echo.to_string(),
+            echo: Self::rand_echo(),
         }
+    }
+
+    pub fn rand_echo() -> String {
+        let mut rng = rand::thread_rng();
+        let mut s = String::new();
+        s.push_str(&chrono::Utc::now().timestamp().to_string());
+        for _ in 0..10 {
+            s.push(rng.gen_range('a'..='z'));
+        }
+        s
     }
 }
 
@@ -498,7 +512,7 @@ fn config_file_write_and_return() -> Result<KoviConf, std::io::Error> {
             .items(&items)
             .default(0)
             .interact()
-            .unwrap();
+            .expect("unreachable");
 
         match select {
             0 => HostType::IPv4,
@@ -514,7 +528,7 @@ fn config_file_write_and_return() -> Result<KoviConf, std::io::Error> {
                 .with_prompt("What is the IP of the OneBot server?")
                 .default(Ipv4Addr::new(127, 0, 0, 1))
                 .interact_text()
-                .unwrap();
+                .expect("unreachable");
             Host::IpAddr(IpAddr::V4(ip))
         }
         HostType::IPv6 => {
@@ -522,7 +536,7 @@ fn config_file_write_and_return() -> Result<KoviConf, std::io::Error> {
                 .with_prompt("What is the IP of the OneBot server?")
                 .default(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1))
                 .interact_text()
-                .unwrap();
+                .expect("unreachable");
             Host::IpAddr(IpAddr::V6(ip))
         }
         HostType::Domain => {
@@ -530,7 +544,7 @@ fn config_file_write_and_return() -> Result<KoviConf, std::io::Error> {
                 .with_prompt("What is the domain of the OneBot server?")
                 .default("localhost".to_string())
                 .interact_text()
-                .unwrap();
+                .expect("unreachable");
             Host::Domain(domain)
         }
     };
@@ -539,20 +553,20 @@ fn config_file_write_and_return() -> Result<KoviConf, std::io::Error> {
         .with_prompt("What is the port of the OneBot server?")
         .default(8081)
         .interact_text()
-        .unwrap();
+        .expect("unreachable");
 
     let access_token: String = Input::with_theme(&ColorfulTheme::default())
         .with_prompt("What is the access_token of the OneBot server? (Optional)")
         .default("".to_string())
         .show_default(false)
         .interact_text()
-        .unwrap();
+        .expect("unreachable");
 
     let main_admin: i64 = Input::with_theme(&ColorfulTheme::default())
         .with_prompt("What is the ID of the main administrator? (Not used yet)")
         .allow_empty(true)
         .interact_text()
-        .unwrap();
+        .expect("unreachable");
 
     // 是否查看更多可选选项
     let more: bool = {
@@ -562,7 +576,7 @@ fn config_file_write_and_return() -> Result<KoviConf, std::io::Error> {
             .items(&items)
             .default(0)
             .interact()
-            .unwrap();
+            .expect("unreachable");
 
         match select {
             0 => false,
@@ -582,7 +596,7 @@ fn config_file_write_and_return() -> Result<KoviConf, std::io::Error> {
                 .items(&items)
                 .default(0)
                 .interact()
-                .unwrap();
+                .expect("unreachable");
 
             match select {
                 0 => false,
