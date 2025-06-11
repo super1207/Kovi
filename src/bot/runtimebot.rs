@@ -116,7 +116,7 @@ pub trait CanSendApi {
     /// `params`: 参数
     fn send_api(&self, action: &str, params: Value) {
         let send_api = SendApi::new(action, params);
-        send_api_request_with_forget(&self.__get_api_tx(), send_api)
+        send_api_request_with_forget(self.__get_api_tx(), send_api)
     }
     /// 发送拓展 Api, 此方法关注返回值。
     ///
@@ -133,6 +133,6 @@ pub trait CanSendApi {
         params: Value,
     ) -> impl std::future::Future<Output = Result<ApiReturn, ApiReturn>> {
         let send_api = SendApi::new(action, params);
-        send_api_request_with_response(&self.__get_api_tx(), send_api)
+        send_api_request_with_response(self.__get_api_tx(), send_api)
     }
 }
