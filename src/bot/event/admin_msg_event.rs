@@ -1,31 +1,29 @@
 use super::{Anonymous, Sender};
-use crate::bot::runtimebot::send_api_request_with_forget;
-use crate::{
-    bot::{plugin_builder::event::Sex, ApiAndOneshot, SendApi},
-    Message,
-};
-use log::{debug, info};
+use crate::MsgEvent;
+use crate::bot::BotInformation;
+use crate::bot::handler::InternalEvent;
+use crate::bot::plugin_builder::event::{Event, PostType};
+use crate::bot::runtimebot::{CanSendApi, send_api_request_with_forget};
+use crate::error::EventBuildError;
+use crate::types::ApiAndOneshot;
+use crate::{Message, bot::SendApi};
+use log::info;
 use serde::Serialize;
-use serde_json::{self, json, Value};
+use serde_json::value::Index;
+use serde_json::{self, Value, json};
 use tokio::sync::mpsc;
 
-#[cfg(not(feature = "cqstring"))]
-use log::error;
-
 #[cfg(feature = "cqstring")]
-use crate::bot::message::{cq_to_arr, CQMessage};
-
-#[deprecated(since = "0.11.0", note = "请使用 `MsgEvent` 代替")]
-pub type AllMsgEvent = MsgEvent;
+use crate::bot::message::CQMessage;
 
 #[derive(Debug, Clone)]
-pub struct MsgEvent {
+pub struct AdminMsgEvent {
     /// 事件发生的时间戳
     pub time: i64,
     /// 收到事件的机器人 登陆号
     pub self_id: i64,
     /// 上报类型
-    pub post_type: String,
+    pub post_type: PostType,
     /// 消息类型
     pub message_type: String,
     /// 消息子类型，如果是好友则是 friend，如果是群临时会话则是 group
@@ -54,127 +52,98 @@ pub struct MsgEvent {
     /// 原始的onebot消息，已处理成json格式
     pub original_json: Value,
 
-    api_tx: mpsc::Sender<ApiAndOneshot>,
+    /// 不推荐的消息发送方式
+    pub api_tx: mpsc::Sender<ApiAndOneshot>,
 }
 
-impl MsgEvent {
-    pub(crate) fn new(
-        api_tx: mpsc::Sender<ApiAndOneshot>,
-        msg: &str,
-    ) -> Result<MsgEvent, Box<dyn std::error::Error>> {
-        let temp: Value = serde_json::from_str(msg)?;
-
-        let temp_object = temp.as_object().unwrap();
-
-        let temp_sender = temp_object["sender"].as_object().unwrap();
-
-        let sender = {
-            Sender {
-                user_id: temp_sender["user_id"].as_i64().unwrap(),
-                nickname: temp_sender
-                    .get("nickname")
-                    .map(|v| v.as_str().unwrap().to_string()),
-                card: temp_sender
-                    .get("card")
-                    .map(|v| v.as_str().unwrap().to_string()),
-                sex: if let Some(v) = temp_sender.get("sex") {
-                    match v.as_str().unwrap() {
-                        "male" => Some(Sex::Male),
-                        "female" => Some(Sex::Female),
-                        _ => None,
-                    }
-                } else {
-                    None
-                },
-                age: temp_sender.get("age").map(|v| v.as_i64().unwrap() as i32),
-                area: temp_sender
-                    .get("area")
-                    .map(|v| v.as_str().unwrap().to_string()),
-                level: temp_sender
-                    .get("level")
-                    .map(|v| v.as_str().unwrap().to_string()),
-                role: temp_sender
-                    .get("role")
-                    .map(|v| v.as_str().unwrap().to_string()),
-                title: temp_sender
-                    .get("title")
-                    .map(|v| v.as_str().unwrap().to_string()),
-            }
+impl Event for AdminMsgEvent {
+    fn de(
+        event: &InternalEvent,
+        bot_info: &BotInformation,
+        api_tx: &mpsc::Sender<ApiAndOneshot>,
+    ) -> Option<Self> {
+        let InternalEvent::OneBotEvent(json_str) = event else {
+            return None;
         };
+        let json: Value = serde_json::from_str(json_str).ok()?;
+        let event = Self::new(api_tx.clone(), json).ok()?;
 
-        let group_id = if let Some(v) = temp_object.get("group_id") {
-            v.as_i64()
-        } else {
-            None
-        };
-        let message = if temp_object["message"].is_array() {
-            let v = temp_object["message"].as_array().unwrap().to_vec();
-            Message::from_vec_segment_value(v).unwrap()
-        } else {
-            #[cfg(feature = "cqstring")]
-            {
-                let str = temp_object["message"].as_str().unwrap().to_string();
-                cq_to_arr(CQMessage::from(str))
-            }
-            #[cfg(not(feature = "cqstring"))]
-            {
-                // 不开启cqstring特性，不能用。
-                error!("不开启cqstring feature，不能使用cq码");
-                panic!()
-            }
-        };
-        let anonymous: Option<Anonymous> =
-            if temp_object.get("anonymous").is_none() || temp_object["anonymous"].is_null() {
-                None
-            } else {
-                let anonymous = temp_object["anonymous"].clone();
-                Some(serde_json::from_value(anonymous).unwrap())
-            };
+        let mut admins = bot_info.deputy_admins.clone();
+        admins.insert(bot_info.main_admin);
 
-        let text = {
-            let mut text_vec = Vec::new();
-            for msg in message.iter() {
-                if msg.type_ == "text" {
-                    text_vec.push(msg.data.get("text").unwrap().as_str().unwrap());
-                };
-            }
-            if !text_vec.is_empty() {
-                Some(text_vec.join("\n").trim().to_string())
-            } else {
-                None
-            }
-        };
+        if !admins.contains(&event.sender.user_id) {
+            return None;
+        }
 
-        let event = MsgEvent {
-            human_text: message.to_human_string(),
-            time: temp_object["time"].as_i64().unwrap(),
-            self_id: temp_object["self_id"].as_i64().unwrap(),
-            post_type: temp_object["post_type"].as_str().unwrap().to_string(),
-            message_type: temp_object["message_type"].as_str().unwrap().to_string(),
-            sub_type: temp_object["sub_type"].as_str().unwrap().to_string(),
-            message,
-            message_id: temp_object["message_id"].as_i64().unwrap() as i32,
-            group_id,
-            user_id: temp_object["user_id"].as_i64().unwrap(),
-            anonymous,
-            raw_message: temp_object["raw_message"].as_str().unwrap().to_string(),
-            font: temp_object["font"].as_i64().unwrap() as i32,
-            sender,
-            api_tx,
-            text,
-            original_json: temp,
-        };
-        debug!("{:?}", event);
-        Ok(event)
+        Some(event)
     }
 }
 
-impl MsgEvent {
+impl AdminMsgEvent {
+    fn new(
+        api_tx: mpsc::Sender<ApiAndOneshot>,
+        json: Value,
+    ) -> Result<AdminMsgEvent, EventBuildError> {
+        let msg_event = MsgEvent::new(api_tx, json)?;
+
+        Ok(AdminMsgEvent {
+            time: msg_event.time,
+            self_id: msg_event.self_id,
+            post_type: msg_event.post_type,
+            message_type: msg_event.message_type,
+            sub_type: msg_event.sub_type,
+            message: msg_event.message,
+            message_id: msg_event.message_id,
+            group_id: msg_event.group_id,
+            user_id: msg_event.user_id,
+            anonymous: msg_event.anonymous,
+            raw_message: msg_event.raw_message,
+            font: msg_event.font,
+            sender: msg_event.sender,
+            text: msg_event.text,
+            human_text: msg_event.human_text,
+            original_json: msg_event.original_json,
+            api_tx: msg_event.api_tx,
+        })
+    }
+}
+
+impl AdminMsgEvent {
+    /// 直接从原始的 Json Value 获取某值
+    ///
+    /// # example
+    ///
+    /// ```rust
+    /// use kovi::PluginBuilder;
+    ///
+    /// PluginBuilder::on_msg(|event| async move {
+    ///     let time = event.get("time").and_then(|v| v.as_i64()).unwrap();
+    ///
+    ///     assert_eq!(time, event.time);
+    /// });
+    /// ```
+    pub fn get<I: Index>(&self, index: I) -> Option<&Value> {
+        self.original_json.get(index)
+    }
+}
+
+impl<I> std::ops::Index<I> for AdminMsgEvent
+where
+    I: Index,
+{
+    type Output = Value;
+
+    fn index(&self, index: I) -> &Self::Output {
+        &self.original_json[index]
+    }
+}
+
+impl AdminMsgEvent {
     fn reply_builder<T>(&self, msg: T, auto_escape: bool) -> SendApi
     where
         T: Serialize,
     {
-        if self.message_type == "private" {
+        if self.is_private() {
             SendApi::new(
                 "send_msg",
                 json!({
@@ -183,18 +152,16 @@ impl MsgEvent {
                 "message":msg,
                 "auto_escape":auto_escape,
                 }),
-                "None",
             )
         } else {
             SendApi::new(
                 "send_msg",
                 json!({
                     "message_type":"group",
-                    "group_id":self.group_id.unwrap(),
+                    "group_id":self.group_id.expect("unreachable"),
                     "message":msg,
                     "auto_escape":auto_escape,
                 }),
-                "None",
             )
         }
     }
@@ -340,5 +307,11 @@ impl MsgEvent {
 
     pub fn is_private(&self) -> bool {
         self.group_id.is_none()
+    }
+}
+
+impl CanSendApi for AdminMsgEvent {
+    fn __get_api_tx(&self) -> &tokio::sync::mpsc::Sender<crate::types::ApiAndOneshot> {
+        &self.api_tx
     }
 }
