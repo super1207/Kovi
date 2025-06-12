@@ -4,7 +4,6 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::any::Any;
-use thiserror::Error;
 
 pub use admin_msg_event::AdminMsgEvent;
 pub use group_msg_event::GroupMsgEvent;
@@ -148,13 +147,6 @@ pub trait Event: Any + Send + Sync {
     ) -> Option<Self>
     where
         Self: Sized;
-}
-
-#[derive(Error, Debug)]
-pub(crate) enum EventBuildError {
-    /// 解析出错
-    #[error("Parse error: {0}")]
-    ParseError(String),
 }
 
 #[test]

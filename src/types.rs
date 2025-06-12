@@ -16,8 +16,8 @@ pub type PinFut = Pin<Box<dyn Future<Output = ()> + Send>>;
 
 pub type NoArgsFn = Arc<dyn Fn() -> PinFut + Send + Sync>;
 
-pub(crate) type ApiOneshotSender = oneshot::Sender<Result<ApiReturn, ApiReturn>>;
-pub(crate) type ApiOneshotReceiver = oneshot::Receiver<Result<ApiReturn, ApiReturn>>;
+pub type ApiOneshotSender = oneshot::Sender<Result<ApiReturn, ApiReturn>>;
+pub type ApiOneshotReceiver = oneshot::Receiver<Result<ApiReturn, ApiReturn>>;
 
 pub type ApiAndOneshot = (
     SendApi,

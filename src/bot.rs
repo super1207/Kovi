@@ -384,7 +384,7 @@ pub struct ApiReturn {
     pub status: String,
     pub retcode: i32,
     pub data: Value,
-    pub(crate) echo: String,
+    pub echo: String,
 }
 
 /// kovi的配置

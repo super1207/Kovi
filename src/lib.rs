@@ -9,10 +9,16 @@
 
 /// Everything about bots is inside
 pub mod bot;
+/// 一些错误枚举
 pub mod error;
+/// 控制台输出日志
 pub mod logger;
+/// 关于插件的一切
 pub mod plugin;
+/// task 提供 kovi 运行时的多线程处理
 pub mod task;
+/// 这里包含一些集成类型
+pub mod types;
 /// 提供一些方便的插件开发函数
 pub mod utils;
 
@@ -20,13 +26,13 @@ pub use bot::ApiReturn;
 pub use bot::Bot;
 pub use bot::event;
 pub use bot::message::Message;
-pub use bot::plugin_builder::PluginBuilder;
-pub use bot::plugin_builder::event::MsgEvent;
-pub use bot::plugin_builder::event::NoticeEvent;
-pub use bot::plugin_builder::event::RequestEvent;
 pub use bot::runtimebot::RuntimeBot;
 pub use error::MessageError;
 pub use kovi_macros::plugin;
+pub use plugin::plugin_builder::PluginBuilder;
+pub use plugin::plugin_builder::event::MsgEvent;
+pub use plugin::plugin_builder::event::NoticeEvent;
+pub use plugin::plugin_builder::event::RequestEvent;
 pub use task::spawn;
 
 #[deprecated(since = "0.11.0", note = "请使用 `MsgEvent` 代替")]
@@ -46,7 +52,5 @@ pub use toml;
 
 #[cfg(feature = "cqstring")]
 pub use regex;
-
-mod types;
 
 pub(crate) use crate::bot::run::RUNTIME as RT;

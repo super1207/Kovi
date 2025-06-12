@@ -49,7 +49,7 @@ pub(crate) struct Listen {
     pub(crate) drop: Vec<NoArgsFn>,
 }
 impl Listen {
-    pub fn clear(&mut self) {
+    pub(crate) fn clear(&mut self) {
         self.list.clear();
         self.drop.clear();
         self.list.shrink_to_fit();

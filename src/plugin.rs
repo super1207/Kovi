@@ -20,7 +20,7 @@ tokio::task_local! {
 }
 
 tokio::task_local! {
-    pub static PLUGIN_NAME: Arc<String>;
+    pub(crate) static PLUGIN_NAME: Arc<String>;
 }
 
 #[derive(Clone)]

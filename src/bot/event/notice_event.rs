@@ -1,10 +1,10 @@
-use super::EventBuildError;
 use crate::{
     bot::{
         BotInformation,
         handler::InternalEvent,
         plugin_builder::event::{Event, PostType},
     },
+    error::EventBuildError,
     types::ApiAndOneshot,
 };
 use serde_json::{Value, value::Index};
