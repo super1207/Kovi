@@ -4,6 +4,7 @@ use crate::bot::Host;
 use crate::bot::handler::InternalEvent;
 use crate::bot::plugin_builder::event::Event;
 use crate::bot::{Bot, runtimebot::RuntimeBot};
+use crate::event::MsgSendFromServerEvent;
 use crate::event::{AdminMsgEvent, GroupMsgEvent, PrivateMsgEvent};
 use crate::plugin::{PLUGIN_BUILDER, PLUGIN_NAME};
 use crate::types::{ApiAndOneshot, NoArgsFn, PinFut};
@@ -198,14 +199,17 @@ impl PluginBuilder {
         PluginBuilder::on::<GroupMsgEvent, _>(handler)
     }
 
+    #[deprecated(
+        note = "请使用 `PluginBuilder::on::(|event: Arc<MsgSendFromServerEvent>| fn())` 代替"
+    )]
     /// 注册事件处理函数。
     pub fn on_msg_send<F, Fut>(handler: F)
     where
-        F: Fn(Arc<MsgEvent>) -> Fut + Send + Sync + 'static,
+        F: Fn(Arc<MsgSendFromServerEvent>) -> Fut + Send + Sync + 'static,
         Fut: Future + Send,
         Fut::Output: Send,
     {
-        PluginBuilder::on::<MsgEvent, _>(handler)
+        PluginBuilder::on::<MsgSendFromServerEvent, _>(handler)
     }
 
     /// 注册事件处理函数。

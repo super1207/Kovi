@@ -72,11 +72,7 @@ impl Event for MsgSendFromServerEvent {
         let json = serde_json::from_str(json_str).ok()?;
         let event = Self::new(api_tx.clone(), json).ok()?;
 
-        if event.post_type == PostType::MessageSent {
-            Some(event)
-        } else {
-            None
-        }
+        Some(event)
     }
 }
 
@@ -86,6 +82,12 @@ impl MsgSendFromServerEvent {
         json: Value,
     ) -> Result<MsgSendFromServerEvent, EventBuildError> {
         let msg_event = MsgEvent::new(api_tx, json)?;
+
+        if msg_event.post_type != PostType::MessageSent {
+            return Err(EventBuildError::ParseError(
+                "MsgSendFromServerEvent Not message_sent".to_string(),
+            ));
+        }
 
         Ok(MsgSendFromServerEvent {
             time: msg_event.time,
