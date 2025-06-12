@@ -34,11 +34,9 @@ http = "1"
 toml = "0.8"
 toml_edit = "0.22"
 croner = "2"
-rand = "0.8"
+rand = "0.9"
 ahash = "0.8"
 parking_lot = "0.12"
-libloading = { version = "0.8", optional = true }
-
 
 [features]
 default = ["logger", "save_bot_status", "plugin-access-control"]

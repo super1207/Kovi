@@ -1,5 +1,6 @@
-use std::{collections::HashMap, ops::Add};
+use std::ops::Add;
 
+use ahash::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -353,7 +354,7 @@ pub(crate) fn cq_to_arr_inner(message: &str) -> Vec<serde_json::Value> {
     let mut val = "".to_owned();
     let mut key = "".to_owned();
     let mut jsonarr: Vec<serde_json::Value> = vec![];
-    let mut cqcode: HashMap<String, serde_json::Value> = HashMap::new();
+    let mut cqcode: HashMap<String, serde_json::Value> = ahash::HashMap::default();
     let mut stat = 0; //0:text 1:cqcode_type 2:cqcode_key 3:cqcode_val
     let mut i = 0usize;
     while i < cqstr.len() {
@@ -364,7 +365,8 @@ pub(crate) fn cq_to_arr_inner(message: &str) -> Vec<serde_json::Value> {
                     let t = &cqstr[i..i + 4];
                     if t.starts_with(&['[', 'C', 'Q', ':']) {
                         if !text.is_empty() {
-                            let mut node: HashMap<String, serde_json::Value> = HashMap::new();
+                            let mut node: HashMap<String, serde_json::Value> =
+                                ahash::HashMap::default();
                             node.insert("type".to_string(), serde_json::json!("text"));
                             node.insert("data".to_string(), serde_json::json!({"text": text}));
                             jsonarr.push(serde_json::json!(node));
@@ -455,7 +457,7 @@ pub(crate) fn cq_to_arr_inner(message: &str) -> Vec<serde_json::Value> {
             }
         } else if stat == 3 {
             if cur_ch == ']' {
-                let mut node: HashMap<String, serde_json::Value> = HashMap::new();
+                let mut node: HashMap<String, serde_json::Value> = ahash::HashMap::default();
                 cqcode.insert(key.clone(), serde_json::json!(val));
                 node.insert("type".to_string(), serde_json::json!(type_));
                 node.insert("data".to_string(), serde_json::json!(cqcode));
@@ -499,7 +501,7 @@ pub(crate) fn cq_to_arr_inner(message: &str) -> Vec<serde_json::Value> {
         i += 1;
     }
     if !text.is_empty() {
-        let mut node: HashMap<String, serde_json::Value> = HashMap::new();
+        let mut node: HashMap<String, serde_json::Value> = ahash::HashMap::default();
         node.insert("type".to_string(), serde_json::json!("text"));
         node.insert("data".to_string(), serde_json::json!({"text": text}));
         jsonarr.push(serde_json::json!(node));

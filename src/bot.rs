@@ -487,11 +487,11 @@ impl SendApi {
     }
 
     pub fn rand_echo() -> String {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut s = String::new();
         s.push_str(&chrono::Utc::now().timestamp().to_string());
         for _ in 0..10 {
-            s.push(rng.gen_range('a'..='z'));
+            s.push(rng.random_range('a'..='z'));
         }
         s
     }
