@@ -1,6 +1,7 @@
 use super::Server;
-use super::{ApiReturn, Bot, Host, handler::InternalEvent};
+use super::{ApiReturn, Bot, Host};
 use crate::bot::handler::InternalInternalEvent;
+use crate::event::InternalEvent;
 use crate::types::ApiAndOneshot;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};

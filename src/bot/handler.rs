@@ -6,8 +6,9 @@ use crate::{
         },
         *,
     },
+    event::InternalEvent,
     plugin::PLUGIN_NAME,
-    types::{ApiAndOneshot, ApiAndRuturn},
+    types::ApiAndOneshot,
 };
 use log::info;
 use parking_lot::RwLock;
@@ -18,14 +19,6 @@ use std::sync::Arc;
 pub(crate) enum InternalInternalEvent {
     KoviEvent(KoviEvent),
     OneBotEvent(InternalEvent),
-}
-
-/// 事件
-pub enum InternalEvent {
-    /// 来自OneBot的事件
-    OneBotEvent(String),
-    /// 来自Kovi发送给服务端并包含了返回结果
-    OneBotApiEvent(ApiAndRuturn),
 }
 
 pub(crate) enum KoviEvent {

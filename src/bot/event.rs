@@ -1,6 +1,6 @@
 use crate::{
-    bot::{BotInformation, handler::InternalEvent},
-    types::ApiAndOneshot,
+    bot::BotInformation,
+    types::{ApiAndOneshot, ApiAndRuturn},
 };
 use serde::{Deserialize, Serialize};
 use std::any::Any;
@@ -147,6 +147,14 @@ pub trait Event: Any + Send + Sync {
     ) -> Option<Self>
     where
         Self: Sized;
+}
+
+/// 事件
+pub enum InternalEvent {
+    /// 来自OneBot的事件
+    OneBotEvent(String),
+    /// 来自Kovi发送给服务端并包含了返回结果
+    OneBotApiEvent(ApiAndRuturn),
 }
 
 #[test]

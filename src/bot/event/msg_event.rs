@@ -1,6 +1,6 @@
 use super::{Anonymous, Sender};
 use crate::bot::BotInformation;
-use crate::bot::handler::InternalEvent;
+use crate::bot::event::InternalEvent;
 use crate::bot::message::cq_to_arr_inner;
 use crate::bot::plugin_builder::event::{Event, PostType};
 use crate::bot::runtimebot::{CanSendApi, send_api_request_with_forget};

@@ -2,7 +2,7 @@ use crate::{
     ApiReturn,
     bot::{
         BotInformation, SendApi,
-        handler::InternalEvent,
+        event::InternalEvent,
         plugin_builder::event::{Event, PostType},
     },
     types::ApiAndOneshot,

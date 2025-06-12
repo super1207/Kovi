@@ -1,7 +1,7 @@
 use crate::{
     bot::{
         BotInformation,
-        handler::InternalEvent,
+        event::InternalEvent,
         plugin_builder::event::{Event, PostType},
     },
     error::EventBuildError,

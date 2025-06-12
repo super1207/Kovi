@@ -1,7 +1,7 @@
 use crate::ApiReturn;
 use crate::bot::BotInformation;
 use crate::bot::SendApi;
-use crate::bot::handler::InternalEvent;
+use crate::bot::event::InternalEvent;
 use crate::bot::plugin_builder::event::Event;
 use crate::bot::runtimebot::CanSendApi;
 use crate::types::ApiAndOneshot;

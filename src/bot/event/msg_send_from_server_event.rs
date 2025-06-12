@@ -1,7 +1,7 @@
 use super::{Anonymous, Sender};
 use crate::MsgEvent;
 use crate::bot::BotInformation;
-use crate::bot::handler::InternalEvent;
+use crate::bot::event::InternalEvent;
 use crate::bot::plugin_builder::event::{Event, PostType};
 use crate::bot::runtimebot::{CanSendApi, send_api_request_with_forget};
 use crate::error::EventBuildError;

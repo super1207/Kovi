@@ -1,9 +1,9 @@
 use crate::RT;
 use crate::bot::BotInformation;
 use crate::bot::Host;
-use crate::bot::handler::InternalEvent;
 use crate::bot::plugin_builder::event::Event;
 use crate::bot::{Bot, runtimebot::RuntimeBot};
+use crate::event::InternalEvent;
 use crate::event::MsgSendFromServerEvent;
 use crate::event::{AdminMsgEvent, GroupMsgEvent, PrivateMsgEvent};
 use crate::plugin::{PLUGIN_BUILDER, PLUGIN_NAME};
