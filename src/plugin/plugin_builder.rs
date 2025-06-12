@@ -158,9 +158,7 @@ impl PluginBuilder {
         }));
     }
 
-    /// 注册消息处理函数。
-    ///
-    /// 注册一个处理程序，用于处理接收到的消息事件（`MsgEvent`）。
+    /// 注册事件处理函数。
     pub fn on_msg<F, Fut>(handler: F)
     where
         F: Fn(Arc<MsgEvent>) -> Fut + Send + Sync + 'static,
@@ -170,9 +168,7 @@ impl PluginBuilder {
         PluginBuilder::on::<MsgEvent, _>(handler)
     }
 
-    /// 注册管理员消息处理函数。
-    ///
-    /// 注册一个处理程序，用于处理接收到的消息事件（`MsgEvent`）。
+    /// 注册事件处理函数。
     pub fn on_admin_msg<F, Fut>(handler: F)
     where
         F: Fn(Arc<AdminMsgEvent>) -> Fut + Send + Sync + 'static,
@@ -182,9 +178,7 @@ impl PluginBuilder {
         PluginBuilder::on::<AdminMsgEvent, _>(handler)
     }
 
-    /// 注册管理员消息处理函数。
-    ///
-    /// 注册一个处理程序，用于处理接收到的消息事件（`MsgEvent`）。
+    /// 注册事件处理函数。
     pub fn on_private_msg<F, Fut>(handler: F)
     where
         F: Fn(Arc<PrivateMsgEvent>) -> Fut + Send + Sync + 'static,
@@ -194,6 +188,7 @@ impl PluginBuilder {
         PluginBuilder::on::<PrivateMsgEvent, _>(handler)
     }
 
+    /// 注册事件处理函数。
     pub fn on_group_msg<F, Fut>(handler: F)
     where
         F: Fn(Arc<GroupMsgEvent>) -> Fut + Send + Sync + 'static,
@@ -203,7 +198,7 @@ impl PluginBuilder {
         PluginBuilder::on::<GroupMsgEvent, _>(handler)
     }
 
-    /// 注册 message_sent 消息处理函数。
+    /// 注册事件处理函数。
     pub fn on_msg_send<F, Fut>(handler: F)
     where
         F: Fn(Arc<MsgEvent>) -> Fut + Send + Sync + 'static,
@@ -213,9 +208,7 @@ impl PluginBuilder {
         PluginBuilder::on::<MsgEvent, _>(handler)
     }
 
-    /// 注册消息处理函数。
-    ///
-    /// 注册一个处理程序，用于处理接收到的消息事件（`NoticeEvent`）。
+    /// 注册事件处理函数。
     pub fn on_notice<F, Fut>(handler: F)
     where
         F: Fn(Arc<NoticeEvent>) -> Fut + Send + Sync + 'static,
@@ -225,9 +218,7 @@ impl PluginBuilder {
         PluginBuilder::on::<NoticeEvent, _>(handler)
     }
 
-    /// 注册异步消息处理函数。
-    ///
-    /// 注册一个处理程序，用于处理接收到的消息事件（`RequestEvent`）。
+    /// 注册事件处理函数。
     pub fn on_request<F, Fut>(handler: F)
     where
         F: Fn(Arc<RequestEvent>) -> Fut + Send + Sync + 'static,
@@ -238,9 +229,7 @@ impl PluginBuilder {
     }
 
     #[deprecated(note = "请使用 `on_notice` 代替")]
-    /// 注册消息处理函数。
-    ///
-    /// 注册一个处理程序，用于处理接收到的消息事件（`NoticeEvent`）。
+    /// 注册事件处理函数。
     pub fn on_all_notice<F, Fut>(handler: F)
     where
         F: Fn(Arc<NoticeEvent>) -> Fut + Send + Sync + 'static,
@@ -251,9 +240,7 @@ impl PluginBuilder {
     }
 
     #[deprecated(note = "请使用 `on_request` 代替")]
-    /// 注册异步消息处理函数。
-    ///
-    /// 注册一个处理程序，用于处理接收到的消息事件（`RequestEvent`）。
+    /// 注册事件处理函数。
     pub fn on_all_request<F, Fut>(handler: F)
     where
         F: Fn(Arc<RequestEvent>) -> Fut + Send + Sync + 'static,
