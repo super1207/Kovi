@@ -305,10 +305,8 @@ impl RuntimeBot {
     ///  - 当前运行目录不存在，这种情况很少见。
     ///  - 权限不足，无法访问当前目录，这样肯定不能运行插件。
     pub fn get_data_path(&self) -> PathBuf {
-        let mut current_dir = std::env::current_dir().expect("Get current directory failed");
-
-        current_dir.push(format!("data/{}", self.plugin_name));
-        current_dir
+        let current_dir = std::env::current_dir().expect("Get current directory failed");
+        current_dir.join("data").join(&self.plugin_name)
     }
 }
 
