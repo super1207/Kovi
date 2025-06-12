@@ -78,6 +78,12 @@ impl PrivateMsgEvent {
     ) -> Result<PrivateMsgEvent, EventBuildError> {
         let msg_event = MsgEvent::new(api_tx, json)?;
 
+        if msg_event.is_group() {
+            return Err(EventBuildError::ParseError(
+                "PrivateMsgEvent Not Group".to_string(),
+            ));
+        }
+
         Ok(PrivateMsgEvent {
             time: msg_event.time,
             self_id: msg_event.self_id,
