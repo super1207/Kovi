@@ -50,7 +50,4 @@ pub use serde_json;
 pub use tokio;
 pub use toml;
 
-#[cfg(feature = "cqstring")]
-pub use regex;
-
 pub(crate) use crate::bot::run::RUNTIME as RT;
